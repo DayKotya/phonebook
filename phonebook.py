@@ -118,7 +118,7 @@ def search_contacts(contacts: List[Dict[str, str]],
 
 
 def search_process(search_field: str) -> None:
-    """Процесс поиска и редактирования записей в телефонной книге."""
+    """Логика поиска и редактирования записей в телефонной книге."""
     contacts = get_contacts()
     search_query = input('Введите запрос для поиска: ')
     search_results = search_contacts(
@@ -126,6 +126,11 @@ def search_process(search_field: str) -> None:
         search_field,
         search_query
         )
+
+    if not search_results:
+        print('\nНичего не найдено.')
+        return
+
     page_num = 1
 
     while True:
@@ -136,6 +141,8 @@ def search_process(search_field: str) -> None:
             )
         if choice.lower() == 'n':
             page_num += 1
+            if page_num > len(contacts) // PAGE_SIZE + 1:
+                page_num = len(contacts) // PAGE_SIZE + 1
 
         elif choice.lower() == 'p' and page_num > 1:
             page_num -= 1
@@ -182,6 +189,8 @@ def main() -> None:
                     )
                 if choice.lower() == 'n':
                     page_num += 1
+                    if page_num > len(contacts) // PAGE_SIZE + 1:
+                        page_num = len(contacts) // PAGE_SIZE + 1
 
                 elif choice.lower() == 'p' and page_num > 1:
                     page_num -= 1
@@ -241,13 +250,13 @@ def main() -> None:
                 elif choice == '5':
                     break
                 else:
-                    print('Такой опции нет.')
+                    print('\nТакой опции нет.')
 
         elif option == '4':
             break
 
         else:
-            print('К сожалению, такого выбора нет.')
+            print('\nК сожалению, такого выбора нет.')
 
 
 if __name__ == '__main__':
