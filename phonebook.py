@@ -108,7 +108,7 @@ def edit_contact(contacts: List[Dict[str, str]],
 
 def search_contacts(contacts: List[Dict[str, str]],
                     search_field: str,
-                    search_query: str):
+                    search_query: str) -> List[Dict[str, str]]:
     """Выполняет поиск контактов по указанному полю и запросу."""
     result = []
     for contact in contacts:
@@ -117,8 +117,51 @@ def search_contacts(contacts: List[Dict[str, str]],
     return result
 
 
+def search_process(search_field: str) -> None:
+    """Процесс поиска и редактирования записей в телефонной книге."""
+    contacts = get_contacts()
+    search_query = input('Введите запрос для поиска: ')
+    search_results = search_contacts(
+        contacts,
+        search_field,
+        search_query
+        )
+    page_num = 1
+
+    while True:
+        show_page(search_results, page_num)
+        choice = input(
+            "Введите 'n' для следующей страницы, 'p' для предыдущей, "
+            "'r' для редактирования, или любую другую клавишу для выхода: "
+            )
+        if choice.lower() == 'n':
+            page_num += 1
+
+        elif choice.lower() == 'p' and page_num > 1:
+            page_num -= 1
+
+        elif choice.lower() == 'r':
+            edit_index = (
+                int(input('Введите номер записи для редактирования: ')) - 1
+            )
+            contact = Contact.from_dict(search_results[edit_index])
+            if 0 <= edit_index < len(search_results):
+                contact.edit()
+                edit_contact(
+                    contacts,
+                    edited_contact=contact,
+                    index=contacts.index(search_results[edit_index])
+                    )
+                update_contactbook(contacts)
+            else:
+                print('Некорректный номер записи')
+        else:
+            break
+
+
 def main() -> None:
     while True:
+        print('\nГлавное меню')
         print('\nВыберите действие: ')
         print('1. Вывести записи;')
         print('2. Добавить запись;')
@@ -134,16 +177,19 @@ def main() -> None:
                 show_page(contacts, page_num)
                 choice = input(
                     "Введите 'n' для следующей страницы, 'p' для предыдущей, "
-                    "'r' для редактирования, или любую другую клавишу для выхода: "
+                    "'r' для редактирования,"
+                    " или любую другую клавишу для выхода: "
                     )
-                if choice == 'n':
+                if choice.lower() == 'n':
                     page_num += 1
 
-                elif choice == 'p' and page_num > 1:
+                elif choice.lower() == 'p' and page_num > 1:
                     page_num -= 1
 
-                elif choice == 'r':
-                    edit_index = int(input('Введите номер записи для редактирования: ')) - 1
+                elif choice.lower() == 'r':
+                    edit_index = (
+                        int(input('Введите номер записи для редактирования: ')) - 1
+                    )
                     contact = Contact.from_dict(contacts[edit_index])
                     if 0 <= edit_index < len(contacts):
                         contact.edit()
@@ -152,182 +198,50 @@ def main() -> None:
                             edited_contact=contact,
                             index=edit_index
                             )
+                        update_contactbook(contacts)
                     else:
                         print('Некорректный номер записи')
                 else:
                     break
 
         elif option == '2':
-            contacts = get_contacts()
-            full_name = input('\nВведите ФИО: ')
-            organization = input('Введите организацию: ')
-            work_number = input('Введите рабочий номер: ')
-            personal_number = input('Введите личный номер: ')
-            contact = Contact(
-                full_name,
-                organization,
-                work_number,
-                personal_number
-                )
-            add_contact(contacts, contact)
+            while True:
+                contacts = get_contacts()
+                contact = Contact(
+                    input('\nВведите ФИО: '),
+                    input('Введите организацию: '),
+                    input('Введите рабочий номер: '),
+                    input('Введите личный номер: ')
+                    )
+                add_contact(contacts, contact)
+                print('Запись успешно добавлена!')
+                choice = input('\nДобавить еще одну запись? (y/n): ')
+                if choice.lower() == 'n':
+                    break
 
         elif option == '3':
-            contacts = get_contacts()
-            print('\nПо какому полю будем искать?')
-            print('1. ФИО;')
-            print('2. Организация;')
-            print('3. Рабочий номер;')
-            print('4. Личный номер;')
-            print('5. Выход.')
-            choice = input('Введите цифру: ')
-            if choice == '1':
-                search_field = 'ФИО'
-                search_query = input('Введите запрос для поиска: ')
-                contacts = search_contacts(
-                    contacts,
-                    search_field,
-                    search_query
-                    )
-                page_num = 1
-
-                while True:
-                    show_page(contacts, page_num)
-                    choice = input(
-                        "Введите 'n' для следующей страницы, 'p' для предыдущей, "
-                        "'r' для редактирования, или любую другую клавишу для выхода: "
-                        )
-                    if choice == 'n':
-                        page_num += 1
-
-                    elif choice == 'p' and page_num > 1:
-                        page_num -= 1
-
-                    elif choice == 'r':
-                        edit_index = int(input('Введите номер записи для редактирования: ')) - 1
-                        contact = Contact.from_dict(contacts[edit_index])
-                        if 0 <= edit_index < len(contacts):
-                            contact.edit()
-                            edit_contact(
-                                contacts,
-                                edited_contact=contact,
-                                index=edit_index
-                                )
-                        else:
-                            print('Некорректный номер записи')
-                    else:
-                        break
-            elif choice == '2':
-                search_field = 'Организация'
-                search_query = input('Введите запрос для поиска: ')
-                contacts = search_contacts(
-                    contacts,
-                    search_field,
-                    search_query
-                    )
-                page_num = 1
-
-                while True:
-                    show_page(contacts, page_num)
-                    choice = input(
-                        "Введите 'n' для следующей страницы, 'p' для предыдущей, "
-                        "'r' для редактирования, или любую другую клавишу для выхода: "
-                        )
-                    if choice == 'n':
-                        page_num += 1
-
-                    elif choice == 'p' and page_num > 1:
-                        page_num -= 1
-
-                    elif choice == 'r':
-                        edit_index = int(input('Введите номер записи для редактирования: ')) - 1
-                        contact = Contact.from_dict(contacts[edit_index])
-                        if 0 <= edit_index < len(contacts):
-                            contact.edit()
-                            edit_contact(
-                                contacts,
-                                edited_contact=contact,
-                                index=edit_index
-                                )
-                        else:
-                            print('Некорректный номер записи')
-                    else:
-                        break
-            elif choice == '3':
-                search_field = 'Рабочий номер'
-                search_query = input('Введите запрос для поиска: ')
-                contacts = search_contacts(
-                    contacts,
-                    search_field,
-                    search_query
-                    )
-                page_num = 1
-
-                while True:
-                    show_page(contacts, page_num)
-                    choice = input(
-                        "Введите 'n' для следующей страницы, 'p' для предыдущей, "
-                        "'r' для редактирования, или любую другую клавишу для выхода: "
-                        )
-                    if choice == 'n':
-                        page_num += 1
-
-                    elif choice == 'p' and page_num > 1:
-                        page_num -= 1
-
-                    elif choice == 'r':
-                        edit_index = int(input('Введите номер записи для редактирования: ')) - 1
-                        contact = Contact.from_dict(contacts[edit_index])
-                        if 0 <= edit_index < len(contacts):
-                            contact.edit()
-                            edit_contact(
-                                contacts,
-                                edited_contact=contact,
-                                index=edit_index
-                                )
-                        else:
-                            print('Некорректный номер записи')
-                    else:
-                        break
-            elif choice == '4':
-                search_field = 'Личный номер'
-                search_query = input('Введите запрос для поиска: ')
-                contacts = search_contacts(
-                    contacts,
-                    search_field,
-                    search_query
-                    )
-                page_num = 1
-
-                while True:
-                    show_page(contacts, page_num)
-                    choice = input(
-                        "Введите 'n' для следующей страницы, 'p' для предыдущей, "
-                        "'r' для редактирования, или любую другую клавишу для выхода: "
-                        )
-                    if choice == 'n':
-                        page_num += 1
-
-                    elif choice == 'p' and page_num > 1:
-                        page_num -= 1
-
-                    elif choice == 'r':
-                        edit_index = int(input('Введите номер записи для редактирования: ')) - 1
-                        contact = Contact.from_dict(contacts[edit_index])
-                        if 0 <= edit_index < len(contacts):
-                            contact.edit()
-                            edit_contact(
-                                contacts,
-                                edited_contact=contact,
-                                index=edit_index
-                                )
-                        else:
-                            print('Некорректный номер записи')
-                    else:
-                        break
-            elif option == '5':
-                break
-            else:
-                print('Такой опции нет.')
+            while True:
+                contacts = get_contacts()
+                print('\nПоиск записей')
+                print('\nПо какому полю будем искать?')
+                print('1. ФИО;')
+                print('2. Организация;')
+                print('3. Рабочий номер;')
+                print('4. Личный номер;')
+                print('5. Выход.')
+                choice = input('Введите цифру: ')
+                if choice in ('1', '2', '3', '4'):
+                    search_field = {
+                        '1': 'ФИО',
+                        '2': 'Организация',
+                        '3': 'Рабочий номер',
+                        '4': 'Личный номер'
+                    }[choice]
+                    search_process(search_field)
+                elif choice == '5':
+                    break
+                else:
+                    print('Такой опции нет.')
 
         elif option == '4':
             break
